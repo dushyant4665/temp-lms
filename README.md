@@ -1,46 +1,109 @@
 # Assignment
 
-Full-stack course platform built with an Express + Prisma backend and a Next.js frontend.
-
-## Stack
+A simple full-stack course platform built with:
 
 - Next.js App Router
 - Tailwind CSS
-- shadcn/ui-style primitives
 - Node.js + Express
 - Prisma + PostgreSQL
-- Email OTP auth with httpOnly cookie sessions
+- Email OTP login
 
-## Repo Layout
+## What This App Does
 
-- `backend/` - Express API, Prisma schema, auth, course, and dashboard logic
-- `frontend/` - Next.js UI, server-rendered course pages, protected dashboard, and lesson viewer
+Users can:
+
+- browse public courses
+- open course details and see chapters plus lessons
+- login with email OTP
+- enroll in a course
+- view enrolled courses on dashboard
+- mark lessons as complete
+
+## Project Structure
+
+- `backend/` - Express API, Prisma schema, auth, courses, and dashboard logic
+- `frontend/` - Next.js frontend, course pages, dashboard, and lesson viewer
+
+## Simple User Flow
+
+```mermaid
+flowchart TD
+  A[Open Website] --> B[View Public Courses]
+  B --> C[Open Course Details]
+  C --> D{Logged in?}
+  D -- No --> E[Go to Login]
+  E --> F[Enter Email]
+  F --> G[Receive OTP]
+  G --> H[Verify OTP]
+  H --> I[Redirect to Dashboard]
+  D -- Yes --> J[Show Enroll Now]
+  J --> K[Enroll in Course]
+  K --> L[Continue Learning]
+  L --> M[Open Lesson Viewer]
+  M --> N[Mark Lesson Complete]
+  N --> O[Dashboard Progress Updates]
+```
+
+## Backend Flow
+
+```mermaid
+flowchart TD
+  A[Next.js Page] --> B[Fetch API]
+  B --> C[Express Route]
+  C --> D[Service Layer]
+  D --> E[Prisma]
+  E --> F[PostgreSQL]
+```
+
+## Main Pages
+
+- `/login` - email OTP login
+- `/courses` - public course catalogue
+- `/courses/[id]` - course details with chapters and lessons
+- `/dashboard` - enrolled courses and progress
+- `/courses/[id]/lessons/[lessonId]` - lesson viewer
 
 ## Setup
 
-1. Clone the repository.
-2. Copy the env files:
-   - `backend/.env.example` to `backend/.env`
-   - `frontend/.env.example` to `frontend/.env.local`
-3. Set `DATABASE_URL` to a PostgreSQL database.
-4. Install dependencies from the repository root:
-   - `npm install`
-5. Run Prisma:
-   - `npm run seed`
-   - or from `backend/`: `npx prisma generate` and `npx prisma db push`
-6. Start both apps:
-   - Backend: `npm run dev:backend`
-   - Frontend: `npm run dev:frontend`
+1. Install dependencies.
+
+```bash
+npm install
+```
+
+2. Create env files.
+
+- copy `backend/.env.example` to `backend/.env`
+- copy `frontend/.env.example` to `frontend/.env.local`
+
+3. Start PostgreSQL.
+
+```bash
+docker compose up -d
+```
+
+4. Prepare the database.
+
+```bash
+npm run seed
+```
+
+5. Start the apps.
+
+```bash
+npm run dev:backend
+npm run dev:frontend
+```
 
 ## Environment Variables
 
-Backend:
+### Backend
 
 - `DATABASE_URL`
 - `JWT_SECRET`
 - `AUTH_COOKIE_NAME`
 - `FRONTEND_URL`
-- `MOCK_OTP` - optional, keeps OTP deterministic for the take-home
+- `MOCK_OTP`
 - `SMTP_HOST`
 - `SMTP_PORT`
 - `SMTP_SECURE`
@@ -48,33 +111,13 @@ Backend:
 - `SMTP_PASS`
 - `SMTP_FROM`
 
-If SMTP is set, the OTP is emailed.
-If SMTP is not set, the backend still works in dev mode and returns `devOtp`.
-
-Frontend:
+### Frontend
 
 - `NEXT_PUBLIC_BACKEND_URL`
 
-## What Works
-
-- Email OTP login
-- Cookie-based session auth
-- `/dashboard` protection in Next.js middleware
-- Public course catalogue
-- Server-rendered course detail pages
-- Enroll flow from the course page
-- Auth-protected lesson viewer
-- Lesson completion persisted via Prisma
-- Dashboard progress overview
-
 ## Notes
 
-- OTP delivery is mocked on purpose so the flow stays self-contained. The backend returns a `devOtp` value during login setup.
-- Lesson completion is stored as a relational record (`LessonCompletion`) instead of a frontend flag.
-- Arcjet and Stripe are not integrated in code here, but the backend is structured so they can be added cleanly later.
+- If SMTP is not set, the backend still works in dev mode and returns a `devOtp`.
+- Lesson completion is saved in the database, not in browser state.
+- The frontend only talks to the Express API. It does not access Prisma directly.
 
-## Known Limitations
-
-- No production email provider is wired up.
-- Stripe checkout/webhooks are left as an optional extension.
-- The frontend shadcn/ui pieces are scaffolded locally to keep the repo self-contained.
