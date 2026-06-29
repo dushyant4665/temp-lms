@@ -1,0 +1,70 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id           String        @id @default(uuid())
+  email        String        @unique
+  name         String?
+  otp          String?
+  otpExpiresAt DateTime?
+  createdAt    DateTime      @default(now())
+  enrollments  Enrollment[]
+}
+
+model Course {
+  id          String      @id @default(uuid())
+  title       String
+  description String
+  price       Float
+  chapters    Chapter[]
+  enrollments Enrollment[]
+  createdAt   DateTime    @default(now())
+}
+
+model Chapter {
+  id        String   @id @default(uuid())
+  title     String
+  position  Int      @default(0)
+  courseId  String
+  course    Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  lessons   Lesson[]
+}
+
+model Lesson {
+  id         String             @id @default(uuid())
+  title      String
+  content    String
+  position   Int                @default(0)
+  chapterId  String
+  chapter    Chapter            @relation(fields: [chapterId], references: [id], onDelete: Cascade)
+  completions LessonCompletion[]
+}
+
+model Enrollment {
+  id         String             @id @default(uuid())
+  userId     String
+  courseId   String
+  enrolledAt DateTime           @default(now())
+  user       User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  course     Course             @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  completions LessonCompletion[]
+
+  @@unique([userId, courseId])
+}
+
+model LessonCompletion {
+  id           String     @id @default(uuid())
+  enrollmentId String
+  lessonId     String
+  completedAt  DateTime   @default(now())
+  enrollment   Enrollment @relation(fields: [enrollmentId], references: [id], onDelete: Cascade)
+  lesson       Lesson     @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+
+  @@unique([enrollmentId, lessonId])
+}
